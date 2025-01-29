@@ -2,7 +2,11 @@
 import React, { useState, useEffect } from 'react';
 import io from 'socket.io-client';
 
-const socket = io('http://localhost:4000');  // Connect to Socket.io server on port 4000
+// Connect to Socket.io server on port 4000
+const socket = io("http://35.180.138.52:4000", {
+  transports: ["websocket", "polling"], 
+  withCredentials: true
+});
 
 const ChatApp = () => {
   const [username, setUsername] = useState('');
