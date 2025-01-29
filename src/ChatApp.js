@@ -12,44 +12,36 @@ const ChatApp = () => {
   const [users, setUsers] = useState([]);
   const [chatMessages, setChatMessages] = useState([]);
 
-  console.log({users})
-  // Handle user registration
+  // Register the user
   const registerUser = () => {
     if (username.trim()) {
-      socket.emit('register', username);  // Send username to server
+      socket.emit('register', username);
       setRegistered(true);
-      console.log(`${username} registered`);
     }
   };
 
-  // Listen for messages from server
+  // Listen for messages and user list updates
   useEffect(() => {
-    socket.on('chat message', (msg) => {
-      setChatMessages((prevMessages) => [...prevMessages, msg]);
+    socket.on('chat message', (data) => {
+      setChatMessages((prevMessages) => [...prevMessages, data]);
     });
 
-    // Handle user list updates (if needed)
     socket.on('user list', (userList) => {
-      setUsers(userList);
+      setUsers(userList.filter((user) => user !== username)); // Exclude self
     });
 
     return () => {
       socket.off('chat message');
       socket.off('user list');
     };
-  }, []);
+  }, [username]);
 
-  // Handle message input change
-  const handleMessageChange = (event) => {
-    setMessage(event.target.value);
-  };
-
-  // Send private message
+  // Send a private message
   const sendMessage = () => {
     if (message.trim() && recipient) {
       socket.emit('private message', {
         recipient: recipient,
-        message: message
+        message: message,
       });
       setMessage('');
     }
@@ -85,7 +77,7 @@ const ChatApp = () => {
             <input
               type="text"
               value={message}
-              onChange={handleMessageChange}
+              onChange={(e) => setMessage(e.target.value)}
               placeholder="Type your message"
             />
             <button onClick={sendMessage}>Send</button>
@@ -95,7 +87,9 @@ const ChatApp = () => {
             <h2>Messages:</h2>
             <ul>
               {chatMessages.map((msg, index) => (
-                <li key={index}>{msg}</li>
+                <li key={index}>
+                  <strong>{msg.sender}:</strong> {msg.message}
+                </li>
               ))}
             </ul>
           </div>
